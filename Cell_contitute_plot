@@ -1,0 +1,14 @@
+##################mapping cell consititution distribution
+sample.data.frame <- data.frame(orig.ident=c("sample1","sample2","sample3","sample4","sample5"),group=c(rep("tumor",3),rep("control",2)))
+#####adding cell number column####
+sc_merge@meta.data$barcode=rownames(sc_merge@meta.data)
+sc_merge@metadata <- left_join(sc_Merge@meta.data,sample.data.frame,by="orig.ident")
+####Count the number of cells for each cell type in the Tumor group and Control group.
+cell.number <- sc_merge@meta.data[,c(1,8,10)] %>% group_by("orig.ident","celltype","group) %>% summarize(count=n) 
+celltype.number$group=factor(celltype.number$group, levels = c("Tumor","Control"))
+#利用ggplot2画柱状图展示
+ggplot2::ggplot(celltype.number,aes(x=celltype, y=count, fill=group))+
+  geom_bar(stat="identity",position = "stack")+
+  theme_bw()+coord_flip()+
+  scale_fill_manual(values = c("#9562A6","#91BB63"))+
+  ylab("Cell number")+xlab("")
