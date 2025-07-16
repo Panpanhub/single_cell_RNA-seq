@@ -1,0 +1,39 @@
+Samples <- c("sample1", "sample2", "sample3","sample4","sample6")
+seurat_list <- list()   
+for( i in Samples) {
+  dir0 <- paste0(getwd(),"/",i,"/")
+  seurat_list[[i]] <- Read10X(data.dir = dir0)
+  seurat_list[[i]] <- CreateSeuratObject(seurat_list[[i]],project=i)
+}
+
+  seurat.merge <- merge(seurat_list[[1]],seurat_list[-1],add.cell.ids = names(seurat_list))         ###merge data_loading
+ 
+seurat.merge[["percent.mt"]] <- PercentageFeatureSet(seurat.merge,pattern = "^MT")               ###mt_DNA  adding
+
+seurat.merge2 <- subset(seurat.merge,subset=percent.mt<10 & nCount_RNA>200&nFeature_RNA>200) ####data-filter 
+VlnPlot(seurat.merge2,features = c("nFeature_RNA","nCount_RNA","percent.mt"),ncol=3) ##view mt,RNA plot
+##################
+sc_Merge <- NormalizeData(seurat.merge2,normalization.method = "LogNormalize",scale.factor = 10000)  ###data normalize process 
+############ acquire high variable genes #########################
+sc_Merge <- FindVariableFeatures(sc_Merge, selection.method = "vst", nfeatures = 2000)
+Calculating gene variances
+all.gene <- rownames(sc_Merge)
+sc.merge <- ScaleData(sc_Merge,feature=all.genes)
+sc.merge <- RunPCA(sc.merge,features = VariableFeatures(sc.merge))
+############# find clusters##################
+sc.merge <- FindNeighbors(sc.merge,dims=1:10)   ####3  指定用于计算细胞相似性的主成分（PCs）范围。默认：1:10（前10个PCs）如果数据复杂，可以增加（如1:20） 通常与RunPCA()和RunUMAP()/RunTSNE()的dims保持一致。
+sc.merge <- FindClusters(sc.merge,resolution = 0.5)  ### resolution 直接关系到最重要的参数，控制聚类结果的粒度值越大，得到的聚类数越多（更细粒度）值越小，得到的聚类数越少（更粗粒度）常用范围：0.4-1.2（0.5是常用起始值）
+sc.merge.umap <- RunUMAP(sc.merge,dims = 1:10)  
+sc_merge.tse <- RunTSNE(sc.merge,dims = 1:10)
+DimPlot(sc.merge.umap,reduction = "umap")      ##visual 
+DimPlot(sc_merge.tse,reduction = "tsne")
+###############################可视化特定feature gene########################
+FeaturePlot(sc_Merge, features = c("CDH1","PECAM1","COL1A2","ACTA2","CD3E","CD79A","LYZ","CSF3R"),reduction = "tsne")
+################ rename cell type ################################
+clsuter.id =c("Endothelial","Epithelial","Epithelial","Smmoth muscle cells","Smmoth muscle cells","Lymphocytes","Fibroblast","Fibroblast","Epithelial","Epithelial","Epithelial",
+                "Fibroblast","Neutrophils","Macrophage","Epithelial","Lymphocytes","Lymphocytes","Fibroblast","Endothelial","Epithelial","Fibroblast","Endothelial")
+levels(sc_merge.tse) 
+names(clsuter.id) =levels(sc_merge.tse)  ###将cluster.id向量的名称设置为sc_merge.tse的聚类水平
+
+
+
