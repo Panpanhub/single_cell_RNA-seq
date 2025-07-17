@@ -1,0 +1,47 @@
+###细胞注解通过SingleR包进行自动注释
+library(SingleR)
+library(celldex)
+library(Seurat)
+library (pheatmap)
+loading annotation package 
+hpca.se <- HumanPrimaryCellAtlasData()
+hpca.se
+load("BlueprintEncode_bpe.se_human.RData")
+
+###################随后进行注释############
+meta<- test.seurat@meta.data
+
+Dimplot(test.seurat,reduction="umap",label=T)
+#####data annotation#####
+test.for.SingleR <- GetAssayData(test.seurat,slot="data")
+test.hesc <- SingleR(test=pbmc_for_SingleR,ref=hpca.se,label=hpca.se$label.main)
+###seurat and singleR de table
+table(test.hesc$lables,meta$seurat_clusters)
+###########umap
+Dimplot(test.hesc,group.by=c("seurat_cluster","label"),reduction="umap")
+###多个数据库注释############
+test.hesc <- SingleR(test=test.for.SingleR,ref=list(BP=bpe.se,HPCA=hpca.se),labels=list(bpe.se$label.main,hpca.se$label.main))
+
+table(test.hesc$labels,meta$seurat_clusters)
+###result analysis ##################
+plotScoreHeatmap(test.hesc)
+plotDeltaDistribution(test.hesc,ncol=3)
+
+###cluster 结果对比
+tab<- table(label=test.hesc$labels,cluster=meta$seurat_cluster)
+pheatmap(log10(tab+10))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
