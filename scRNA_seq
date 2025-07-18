@@ -35,5 +35,42 @@ clsuter.id =c("Endothelial","Epithelial","Epithelial","Smmoth muscle cells","Smm
 levels(sc_merge.tse) 
 names(clsuter.id) =levels(sc_merge.tse)  ###将cluster.id向量的名称设置为sc_merge.tse的聚类水平
 
+########################################################################################################################################################################
+Idents(sc_merge) <- scMerge$celltype 
+Epithelial=subset(sc_Merge, idents = "Epithelial")
+Epithelial <- FindVariableFeatures(Epithelial, selection.method = "vst", nfeatures = 2000)
+Epithelial <- RunPCA(Epithelial, features = VariableFeatures(object = Epithelial))
+ElbowPlot(Epithelial)
+#选取前10个主成分进行降维聚类分析
+Epithelial <- FindNeighbors(Epithelial, dims = 1:8)
+Epithelial <- FindClusters(Epithelial, resolution = 0.2)
+Epithelial <- RunTSNE(Epithelial, dims = 1:8)
+DimPlot(Epithelial, reduction = "tsne",label = T, cols=cols)#右图
+DimPlot(Epithelial, reduction = "tsne",label = T, group.by = "group", cols=c c("#91BB63","#9463A7"))
+
+###############################find markers#######################
+all.markers <- FindAllMarkers(Epithelial,only.pos=T,logfc.threshold=0.9)
+Top.gene <- all.markers %>%group_by(cluster) %>% top_n(20,wt=avg_log2FC)
+###plot top 20 different gene expression##########
+TOP.genes.avg=AverageExpression(Epithelial, features = unique(TOP.genes$gene))
+bk <- c(seq(-2,2,by=0.01))
+pheatmap::pheatmap(TOP.genes.avg$RNA, scale = "row", 
+                   cluster_rows = F, cluster_cols = F, 
+                   show_colnames = T,breaks=bk,
+                   color =colorRampPalette(rev(brewer.pal(n = 11, name = "PiYG")))(length(bk)))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
