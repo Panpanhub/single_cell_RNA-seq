@@ -1,0 +1,103 @@
+##artifical annotation##########################
+
+merge_cell_type<- function(Seurat_obj,cell_type_c){
+result_df<- Seurat_obj@meta.data
+result_df<- result_df%>% mutate(cell_type=case_when(
+as.character(seurat_clusters) %in% names(cell_type_c) ~ as.character(cell_type_c[as.character(seurat_clusters)]),
+T~ paste0("cluster_",seurat_clusters)
+))
+Seurat_obj@meta.data$cell_type<- result_df$cell_type
+return(Seurat_obj)
+}
+cell_type_c<- c("T cell","b CELL") #判断出的细胞类型
+names(cell_type_c) <- c("1","2")    #一一对应的cluster
+Seurat_obj<- merge_cell_type(Seurat_obj,cell_type_c)
+
+
+# install.packages(scCATCH)
+suppressMessages(library(scCATCH))
+#直接读取上一步seurat导出的部分结果
+Seurat_obj<- readRDS(opt$seurat)
+#创建scCATCH对象
+scCATCH_obj<- createscCATCH(data= Seurat_obj@assays$RNA$data,
+cluster= as.character(Seurat_obj@meta.data$seurat_clusters))
+#细胞注释
+database<- cellmatch
+#database <- read_tsv("marker.txt", show_col_types = FALSE) %>% as.data.frame() #如果自定义marker则从外部读取
+scCATCH_obj<- scCATCH::findmarkergene(scCATCH_obj,marker= database,
+species= "Human", tissue= "",
+cluster= 'All')
+scCATCH_obj<- findcelltype(scCATCH_obj)
+#保存结果
+saveRDS(scCATCH_obj,paste0(opt$prefix,".scCATCH_obj.rds"))
+#合并细胞类型到seurat结果
+merge_cell_type<- function(Seurat_obj,cell_type_c){
+result_df<- Seurat_obj@meta.data
+result_df<- result_df%>% mutate(cell_type=case_when(
+as.character(seurat_clusters) %in% names(cell_type_c) ~ as.character(cell_type_c[as.character(seurat_clusters)]),
+T~ paste0("cluster_",seurat_clusters)
+))
+Seurat_obj@meta.data$cell_type<- result_df$cell_type
+return(Seurat_obj)
+}
+cell_type_c<- scCATCH_obj@celltype$cell_type
+names(cell_type_c) <- as.character(scCATCH_obj@celltype$cluster)
+Seurat_obj<- merge_cell_type(Seurat_obj,cell_type_c)
+包：SingleR
+
+
+
+| Aran, Dvir, et al. “Reference-based analysis of lung single-cell sequencing reveals a transitional profibrotic macrophage.” Nature immunology 20.2 (2019): 163-172.
+
+内置7个数据库，可以组合使用。7个数据库需要用哪个就运行哪个, 这是需要从网上下载的，速度取决于网速；可以一次下载后保存，后面直接读取。
+
+BiocManager::install("SingleR")
+suppressMessages(library(SingleR))
+#取消前面的#号即可运行
+# BlueprintEncodeData <- BlueprintEncodeData() # 19859
+# DatabaseImmuneCellExpressionData <- DatabaseImmuneCellExpressionData() # 48043
+# HumanPrimaryCellAtlasData <- HumanPrimaryCellAtlasData() # 19363
+# ImmGenData <- ImmGenData() # 22134
+# MonacoImmuneData <- MonacoImmuneData() # 46077
+# MouseRNAseqData <- MouseRNAseqData() # 21214
+# NovershternHematopoieticData <- NovershternHematopoieticData() # 13276
+# save(BlueprintEncodeData,DatabaseImmuneCellExpressionData,HumanPrimaryCellAtlasData,ImmGenData,MonacoImmuneData,MouseRNAseqData,NovershternHematopoieticData, file = "singler.database.Rdata")
+Seurat_obj<- readRDS(opt$Seurat_obj)
+#可以同时使用多个数据库
+dbtype_list<- c("BlueprintEncodeData", "HumanPrimaryCellAtlasData")
+ref_list= list()
+label_list= list()
+for(dbnamein dbtype_list){
+db<- get(dbname)
+ref_list[dbname] <- db
+label_list[dbname][[1]] <- db$label.main
+}
+#细胞注释
+SingleR_result<- SingleR(test= Seurat_obj@assays$RNA$data, ref= ref_list, labels= label_list)
+saveRDS(SingleR_result, file=paste(opt$prefix,"singleR.rds",sep="."))
+#保存结果
+Seurat_obj@meta.data$cell_type<- SingleR_result$labels
+
+##################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
