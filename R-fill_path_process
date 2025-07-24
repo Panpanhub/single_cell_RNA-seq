@@ -32,3 +32,34 @@ for (file in files) {
   file.copy(from = src, to = dst)
 }
 
+############loading 10X file in bulk#####################
+file <- paste("/nfs3/panpan/scRNA/test_pbmc/test1/",list.files("/nfs3/panpan/scRNA/test_pbmc/test1"),sep="")
+
+sce.list <-  lapply(file,function(x){
+  
+ CreateSeuratObject(counts = Read10X(x),project = str_split(x,"/")[[1]][7])
+})
+
+
+
+###########seurat sct objet 确定
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
