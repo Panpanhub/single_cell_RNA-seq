@@ -1,0 +1,144 @@
+##################Standard Seurat workflow########################
+pbmc <- NormalizeData(object = pbmc)
+pbmc <- FindVariableFeatures(object = pbmc)
+pbmc <- ScaleData(object = pbmc)
+pbmc <- RunPCA(object = pbmc)
+pbmc <- FindNeighbors(object = pbmc, dims = 1:30)
+pbmc <- FindClusters(object = pbmc)
+pbmc <- RunUMAP(object = pbmc, dims = 1:30)
+DimPlot(object = pbmc, reduction = "umap")
+
+#######################SCT Seurat workflow######################
+pbmc <- SCTransform(object = pbmc)
+pbmc <- RunPCA(object = pbmc)
+pbmc <- FindNeighbors(object = pbmc, dims = 1:30)
+pbmc <- FindClusters(object = pbmc)
+pbmc <- RunUMAP(object = pbmc, dims = 1:30)
+DimPlot(object = pbmc, reduction = "umap")
+# note that you can chain multiple commands together with %>%
+pbmc <- SCTransform(pbmc) %>%
+    RunPCA() %>%
+    FindNeighbors(dims = 1:30) %>%
+    FindClusters() %>%
+    RunUMAP(dims = 1:30)
+##########################seurat objecet data access#################
+colnames(pbmc) ####get cell sample name
+Cells(pbmc)  ####get cell name 
+
+Featurename(pbmc) ####featurename 
+rownames(pbmc) ### featurename
+#######################cell number##########################
+cells_num <- ncol(pbmc)
+num_features <- nrow(pbmc)
+#########################################################
+###list of object layers
+Layers(pbmc)
+##working with multimodal objects list assays####
+Assays(pbmc)
+###Assay ####################
+Features(pbmc[["RNA"]]
+Features(pbmc[["ADT"]]
+###############set variablefeatures##########
+VaribaleFeatures(cbmc)  ## variable feature name 
+VariableFeatures(cbmc) <- var.gene.names
+########################
+##set for a specific assay ###########
+VariableFeatures(cbmc[["ADT"]]) <- var.gene.names
+####################################################
+##setting and retrieving cell identities#############
+Idents(object=pbmc) <- "seurat_annnotations"
+##view cell identityes get summary table########
+Idents(pbmc)
+table(Idengts(pbmc))
+###set identiy to CD4 T cells for all cells 
+Idents(pbmc) <- "CD4 T cells"
+####################################################
+##set for a selected group of cells ##
+pbmc.cells <- Cells(pbmc)
+Idents(object=pbmc,cells=pbmc.cells[1:10]) <- "CD4 T cells"
+##get cell identity classes 
+#############
+Idents(pbmc)
+levels(x=pbmc)
+####################################stash cell identity classes in metadata######################################
+pbmc[["old.ident"]] <- Idents(object=pbmc)
+levels(x=pbmc)
+#########stash cell identity classes in metatdata ###################
+pbmc[["old.ident""]] <- Idengts(pbmc)
+pbmc <- StashIdent(object=pbmc,save.name="old.ident")
+##rename identity classes
+pbmc <- RenameIdents(object=pbmc,"CD T cells" ="T Helper cells")
+#########cell metadata###############
+pbmc[[]]  ##view metadata data frame, stored in object@meta.data 
+###retrieve specific values from the metadata 
+pbmc$nCount_RNA
+pbmc[[c("percent.mito","nFeature_RNA")]]
+##################Add metadata , see? AddMetaData
+random_group_labels <- sample(x = c("g1", "g2"), size = ncol(x = pbmc), replace = TRUE)
+pbmc$groups <- random_group_labels
+################################################################Expression data(stored as layers in Seurat V5)
+##Retriee data in an expression matrix RNA counts matrix
+pbmc[["RNA"]]$counts
+##alteranate accessor function with the same result 
+LayerData(pbmc,assay="RNA",layers="counts")
+###GetAssayData(object=pbmc,assay="RNA",slot="counts")
+###ADT counts matrix(multimodal object
+cbmc[["ADT"]]$counts
+##Set expression data assume new.data is a new expression matrix 
+pbmc[["RNA"]]$counts <- new.data
+
+# Alternate setter function with the same result
+LayerData(pbmc, assay = "RNA", layer = "counts") <- new.data
+
+# SetAssayData from Seurat v4 is still supported
+pbmc <- SetAssayData(object = pbmc, slot = "counts", new.data = new.data)
+
+###################Dimensinal reductions############################
+##get cell embeddings and feature loadings strored on pbmc[["pca"]]@cell.embeddings
+Embeddings(pbmc,reduction="pca")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
